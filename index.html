@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Escenario G | Difusión de Opinión - Métodos Numéricos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1><i class="fas fa-users"></i> Escenario G: Modelo de difusión de opinión o descontento social</h1>
+        <p>Simulación numérica de abastecimiento, precios y conflicto social en contexto de crisis</p>
+        
+        <div class="context-box">
+            <div class="context-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="context-content">
+                <strong>Contexto del problema real</strong>
+                <p>En situaciones de crisis económica y social, la opinión pública puede cambiar rápidamente. Los ciudadanos neutrales pueden convertirse en manifestantes activos debido al descontento, mientras que los mediadores (líderes, instituciones, diálogo) pueden reducir la tensión. Este modelo de dinámica social permite simular cómo evolucionan estas poblaciones y predecir escenarios de estabilidad o conflicto.</p>
+                <p><strong>¿Por qué usamos ecuaciones diferenciales y métodos numéricos?</strong> El sistema de EDOs describe la interacción entre neutrales (N), manifestantes (M) y mediadores (D). Como no tiene solución analítica cerrada, utilizamos métodos numéricos como Heun y RK4 para aproximar su evolución en el tiempo.</p>
+            </div>
+        </div>
+
+        <!-- MODELO MATEMÁTICO -->
+        <div class="modelo-box">
+            <div class="modelo-header">
+                <i class="fas fa-square-root-alt"></i>
+                <strong>Modelo Matemático</strong>
+            </div>
+            <div class="modelo-content">
+                <p>Sistema de ecuaciones diferenciales ordinarias:</p>
+                <div class="formula">
+                    dN/dt = -a·N·M + b·D<br>
+                    dM/dt = a·N·M - c·M·D<br>
+                    dD/dt = k·M - r·D
+                </div>
+                <p>Donde:</p>
+                <ul>
+                    <li><strong>N(t)</strong> = Ciudadanos neutrales</li>
+                    <li><strong>M(t)</strong> = Manifestantes activos</li>
+                    <li><strong>D(t)</strong> = Mediadores / actores de diálogo</li>
+                    <li><strong>a</strong> = Tasa de influencia del descontento (contagio)</li>
+                    <li><strong>b</strong> = Tasa de recuperación a neutralidad</li>
+                    <li><strong>c</strong> = Efectividad del diálogo</li>
+                    <li><strong>k</strong> = Reacción institucional (creación de mediadores)</li>
+                    <li><strong>r</strong> = Desgaste de los mediadores</li>
+                </ul>
+                <p><strong>Métodos numéricos utilizados:</strong></p>
+                <ul>
+                    <li><i class="fas fa-chart-line"></i> <strong>Heun (Euler mejorado):</strong> Método predictor-corrector. Error O(h²)</li>
+                    <li><i class="fas fa-chart-area"></i> <strong>Runge-Kutta 4to orden (RK4):</strong> Mayor precisión. Error O(h⁴)</li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- PANEL DE PARÁMETROS -->
+    <div class="params-card">
+        <div class="card-header">
+            <i class="fas fa-sliders-h"></i>
+            <h3>Parámetros del modelo social</h3>
+        </div>
+        
+        <div class="params-grid">
+            <div class="param">
+                <label><i class="fas fa-users"></i> N₀ (Neutrales iniciales)</label>
+                <input type="number" id="N0" value="900" step="50" min="0">
+                <small>Población neutral al inicio</small>
+            </div>
+            <div class="param">
+                <label><i class="fas fa-fist-raised"></i> M₀ (Manifestantes iniciales)</label>
+                <input type="number" id="M0" value="80" step="10" min="0">
+                <small>Manifestantes activos al inicio</small>
+            </div>
+            <div class="param">
+                <label><i class="fas fa-handshake"></i> D₀ (Mediadores iniciales)</label>
+                <input type="number" id="D0" value="50" step="10" min="0">
+                <small>Mediadores/Diálogo al inicio</small>
+            </div>
+        </div>
+        
+        <div class="params-grid">
+            <div class="param">
+                <label><i class="fas fa-chart-line"></i> a (Tasa de contagio)</label>
+                <input type="number" id="a" value="0.00002" step="0.0005" min="0" max="0.01">
+                <small>Velocidad de conversión N → M</small>
+            </div>
+            <div class="param">
+                <label><i class="fas fa-undo-alt"></i> b (Recuperación)</label>
+                <input type="number" id="b" value="0.03" step="0.03" min="0" max="1">
+                <small>Tasa D → N</small>
+            </div>
+            <div class="param">
+                <label><i class="fas fa-comments"></i> c (Efectividad diálogo)</label>
+                <input type="number" id="c" value="0.0005" step="0.005" min="0" max="1">
+                <small>Eficacia de mediadores sobre M</small>
+            </div>
+        </div>
+        
+        <div class="params-grid">
+            <div class="param">
+                <label><i class="fas fa-building"></i> k (Reacción institucional)</label>
+                <input type="number" id="k" value="0.08" step="0.01" min="0" max="1">
+                <small>Creación de mediadores por M</small>
+            </div>
+            <div class="param">
+                <label><i class="fas fa-hourglass-half"></i> r (Desgaste mediadores)</label>
+                <input type="number" id="r" value="0.05" step="0.005" min="0" max="1">
+                <small>Pérdida de mediadores por tiempo</small>
+            </div>
+            <div class="param">
+                <label><i class="fas fa-clock"></i> Tiempo máximo (días)</label>
+                <input type="number" id="tMax" value="30" step="10" min="10">
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="btnSimular" class="btn-primary"><i class="fas fa-play"></i> Simular con ambos métodos</button>
+            <button id="btnResetDefault" class="btn-secondary"><i class="fas fa-undo"></i> Restablecer valores por defecto</button>
+        </div>
+    </div>
+
+    <!-- PESTAÑAS DE MÉTODOS -->
+    <div class="tabs">
+        <button class="tablink active" data-tab="tabHeun"><i class="fas fa-chart-line"></i> Heun (Euler mejorado)</button>
+        <button class="tablink" data-tab="tabRK4"><i class="fas fa-chart-area"></i> Runge-Kutta 4 (RK4)</button>
+        <button class="tablink" data-tab="tabComparacion"><i class="fas fa-chart-gantt"></i> Análisis de Resultados</button>
+    </div>
+
+    <!-- PESTAÑA HEUN -->
+    <div id="tabHeun" class="tabcontent active">
+        <h2><i class="fas fa-chart-line"></i> Método de Heun</h2>
+        <p class="algo-desc"><strong>Algoritmo:</strong> Predictor: y* = yₙ + h·f(tₙ, yₙ) → Corrector: yₙ₊₁ = yₙ + (h/2)·[f(tₙ, yₙ) + f(tₙ₊₁, y*)]</p>
+        
+        <div class="results-grid">
+            <div class="grafico-container">
+                <canvas id="chartHeun" style="width:100%; height:350px;"></canvas>
+            </div>
+            <div class="info-container">
+                <div class="stats-card">
+                    <h4><i class="fas fa-chart-line"></i> Estado final (t = <span id="heunTMax">100</span>)</h4>
+                    <p><span style="color:#3b82f6">N:</span> <span id="heunNFinal">---</span><br>
+                    <span style="color:#ef4444">M:</span> <span id="heunMFinal">---</span><br>
+                    <span style="color:#10b981">D:</span> <span id="heunDFinal">---</span></p>
+                    <h4><i class="fas fa-chart-line"></i> Tendencias</h4>
+                    <p id="heunTendencias">---</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-wrapper">
+            <h3><i class="fas fa-table"></i> Tabla de iteraciones (cada 5 días)</h3>
+            <table id="tablaHeun" class="results-table">
+                <thead>
+                    <tr>
+                        <th>t (días)</th>
+                        <th>N (Neutrales)</th>
+                        <th>M (Manifestantes)</th>
+                        <th>D (Mediadores)</th>
+                        <th>k1_N, k1_M, k1_D</th>
+                        <th>k2_N, k2_M, k2_D</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="interpretacion" id="heunInterpretacion"></div>
+    </div>
+
+    <!-- PESTAÑA RK4 -->
+    <div id="tabRK4" class="tabcontent">
+        <h2><i class="fas fa-chart-area"></i> Runge-Kutta 4to orden (RK4)</h2>
+        <p class="algo-desc"><strong>Algoritmo:</strong> k₁ = f(tₙ, yₙ), k₂ = f(tₙ + h/2, yₙ + h·k₁/2), k₃ = f(tₙ + h/2, yₙ + h·k₂/2), k₄ = f(tₙ + h, yₙ + h·k₃), yₙ₊₁ = yₙ + (h/6)(k₁ + 2k₂ + 2k₃ + k₄)</p>
+        
+        <div class="results-grid">
+            <div class="grafico-container">
+                <canvas id="chartRK4" style="width:100%; height:350px;"></canvas>
+            </div>
+            <div class="info-container">
+                <div class="stats-card">
+                    <h4><i class="fas fa-chart-line"></i> Estado final (t = <span id="rk4TMax">100</span>)</h4>
+                    <p><span style="color:#3b82f6">N:</span> <span id="rk4NFinal">---</span><br>
+                    <span style="color:#ef4444">M:</span> <span id="rk4MFinal">---</span><br>
+                    <span style="color:#10b981">D:</span> <span id="rk4DFinal">---</span></p>
+                    <h4><i class="fas fa-chart-line"></i> Tendencias</h4>
+                    <p id="rk4Tendencias">---</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-wrapper">
+            <h3><i class="fas fa-table"></i> Tabla de iteraciones (cada 5 días)</h3>
+            <table id="tablaRK4" class="results-table">
+                <thead>
+                    <tr>
+                        <th>t (días)</th>
+                        <th>N (Neutrales)</th>
+                        <th>M (Manifestantes)</th>
+                        <th>D (Mediadores)</th>
+                        <th>k₁ (N,M,D)</th>
+                        <th>k₂ (N,M,D)</th>
+                        <th>k₃ (N,M,D)</th>
+                        <th>k₄ (N,M,D)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="interpretacion" id="rk4Interpretacion"></div>
+    </div>
+
+    <!-- PESTAÑA COMPARACIÓN -->
+    <div id="tabComparacion" class="tabcontent">
+        <h2><i class="fas fa-chart-gantt"></i> Comparación de métodos</h2>
+        
+        <div class="grafico-container">
+            <canvas id="chartComparacion" style="width:100%; height:350px;"></canvas>
+        </div>
+        
+        <div class="preguntas-container">
+            <h3><i class="fas fa-question-circle"></i> Respuestas a las preguntas del desafío</h3>
+            <div class="preguntas-grid">
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿El conflicto tiende a estabilizarse?</h4>
+                        <p id="respuestaEstabilidad">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-arrow-up"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Manifestantes aumentan o disminuyen?</h4>
+                        <p id="respuestaManifestantes">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-comments"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Qué pasa si mejora la tasa de diálogo? (c)?</h4>
+                        <p id="respuestaDialogo">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-handshake"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Qué pasa si no existen mediadores (k=0, D₀=0)?</h4>
+                        <p id="respuestaSinMediadores">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Qué parámetros hacen que el conflicto se masifique?</h4>
+                        <p id="respuestaMasificacion">---</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="comparacion-analisis">
+            <h3><i class="fas fa-microscope"></i> Análisis crítico del modelo</h3>
+            <div id="analisisTexto"></div>
+        </div>
+    </div>
+
+    <footer class="conclusiones">
+        <h3><i class="fas fa-clipboard-list"></i> Conclusiones y limitaciones</h3>
+        <div id="conclusionesTexto"></div>
+    </footer>
+</div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
