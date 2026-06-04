@@ -247,16 +247,23 @@ function actualizarSimulacion() {
     document.getElementById('splinesSegmentos').innerHTML = `${puntosOrdenados.length - 1}`;
     
     const { filas } = generarTablaNewtonFormateada(puntosOrdenados);
-    const maxCols = Math.max(...filas.map(f => Object.keys(f).length));
+    const n = puntosOrdenados.length;
+
+    // Encabezado
     const thead = document.getElementById('newtonThead');
-    thead.innerHTML = '<tr><th>xᵢ</th>' + Array.from({ length: maxCols - 1 }, (_, i) => `<th>f${i}</th>`).join('') + '</tr>';
+    thead.innerHTML = '<tr><th>xᵢ</th>' + 
+        Array.from({ length: n }, (_, i) => `<th>f[${i}]</th>`).join('') + 
+    '</tr>';
+
+    // Cuerpo — cada fila i tiene valores en columnas 0..i, el resto vacío
     const tbody = document.getElementById('newtonTbody');
-    tbody.innerHTML = filas.map(f => {
-        const cols = [f.x];
-        for (let i = 0; i < maxCols - 1; i++) {
-            cols.push(f[`f${i}`] !== undefined ? f[`f${i}`] : '-');
+    tbody.innerHTML = filas.map((f, i) => {
+        let celdas = `<td style="padding:4px">${f.x}</td>`;
+        for (let col = 0; col < n; col++) {
+            const val = f[`f${col}`];
+            celdas += `<td style="padding:4px">${val !== undefined ? val : ''}</td>`;
         }
-        return '<tr>' + cols.map(c => `<td style="padding:4px">${c}</tr>`).join('') + '</tr>';
+        return `<tr>${celdas}</tr>`;
     }).join('');
     
     actualizarGrafico(chartLagrange, curvaLagrange, puntosOrdenados, `Lagrange - ${productoNombre}`, '#3b82f6');
