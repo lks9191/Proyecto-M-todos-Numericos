@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Escenario D | Costo Acumulado - Métodos Numéricos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1><i class="fas fa-coins"></i> Escenario D: Costo acumulado y pérdida del poder adquisitivo familiar</h1>
+        <p>Simulación numérica de abastecimiento, precios y conflicto social en contexto de crisis</p>
+        
+        <div class="context-box">
+            <div class="context-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="context-content">
+                <strong>Contexto del problema real</strong>
+                <p>En contextos de inflación y crisis económica, los precios de los alimentos básicos aumentan de forma continua, reduciendo la capacidad de compra de las familias. Calcular el gasto acumulado mensual no es trivial, ya que los precios cambian día a día y solo se tienen mediciones esporádicas.</p>
+            </div>
+        </div>
+
+        <!-- MODELO MATEMÁTICO -->
+        <div class="modelo-box">
+            <div class="modelo-header">
+                <i class="fas fa-square-root-alt"></i>
+                <strong>Modelo Matemático</strong>
+            </div>
+            <div class="modelo-content">
+                <p>El costo acumulado durante un mes es el área bajo la curva de precios:</p>
+                <div class="formula">
+                    Gasto Total = ∫₀³⁰ P(t) dt × Q
+                </div>
+                <p>Donde:</p>
+                <ul>
+                    <li><strong>P(t)</strong> = Precio del producto en el día t (Bs)</li>
+                    <li><strong>Q</strong> = Cantidad consumida mensual (kg/unidades)</li>
+                    <li><strong>∫₀³⁰ P(t) dt</strong> = Área bajo la curva de precios (Bs·día)</li>
+                </ul>
+                <p><strong>Métodos numéricos utilizados:</strong></p>
+                <ul>
+                    <li><i class="fas fa-chart-line"></i> <strong>Regla del Trapecio:</strong> Aproxima el área como suma de trapecios. Error O(h²)</li>
+                    <li><i class="fas fa-chart-area"></i> <strong>Simpson 1/3:</strong> Usa parábolas en cada par de intervalos. Error O(h⁴)</li>
+                    <li><i class="fas fa-chart-area"></i> <strong>Simpson 3/8:</strong> Usa parábolas cúbicas. Error O(h⁴)</li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- SELECCIÓN DE PRODUCTOS -->
+    <div class="producto-card">
+        <div class="producto-header">
+            <i class="fas fa-boxes"></i>
+            <h3>Productos de la canasta familiar</h3>
+        </div>
+        <div class="productos-seleccion" id="productosSeleccion"></div>
+        <div class="producto-controls">
+            <button id="btnAgregarProducto" class="btn-secondary"><i class="fas fa-plus"></i> Nuevo producto</button>
+            <div id="nuevoProductoContainer" style="display: none; margin-top: 10px;">
+                <input type="text" id="nuevoProductoNombre" placeholder="Nombre del producto">
+                <input type="number" id="nuevoProductoCantidad" placeholder="Cantidad mensual" step="0.5" value="1">
+                <button id="btnGuardarNuevoProducto" class="btn-small">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SELECTOR DE PRODUCTO PARA EDITAR -->
+    <div class="producto-selector-card">
+        <label><i class="fas fa-edit"></i> Editar precios de otro producto:</label>
+        <select id="selectorProductoEditar" class="producto-select"></select>
+        <button id="btnCambiarProducto" class="btn-secondary"><i class="fas fa-exchange-alt"></i> Cargar datos</button>
+    </div>
+
+    <!-- PANEL DE DATOS - TABLA EDITABLE -->
+    <div class="params-card">
+        <div class="card-header">
+            <i class="fas fa-table"></i>
+            <h3>Datos de precios del producto: <span id="productoEditandoNombre">Papa</span></h3>
+            <span class="badge" id="puntosCount">0 puntos</span>
+        </div>
+        
+        <div class="table-header-actions">
+            <button id="btnAgregarFila" class="btn-secondary"><i class="fas fa-plus"></i> Agregar punto</button>
+            <button id="btnCargarDefault" class="btn-secondary"><i class="fas fa-undo"></i> Cargar datos por defecto</button>
+            <button id="btnLimpiar" class="btn-secondary"><i class="fas fa-trash"></i> Limpiar tabla</button>
+        </div>
+        
+        <div class="table-wrapper">
+            <table id="tablaPuntosEditable" class="editable-table">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-calendar-day"></i> Día</th>
+                        <th><i class="fas fa-dollar-sign"></i> Precio (Bs)</th>
+                        <th><i class="fas fa-tools"></i> Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaPuntosBody"></tbody>
+            </table>
+        </div>
+        
+        <div class="params-grid">
+            <div class="param">
+                <label><i class="fas fa-weight-hanging"></i> Cantidad mensual (kg/unidades)</label>
+                <input type="number" id="cantidadMensual" value="10" step="1">
+            </div>
+            <div class="param">
+                <label><i class="fas fa-chart-line"></i> Mostrar desde día</label>
+                <input type="number" id="rangoMin" value="0">
+            </div>
+            <div class="param">
+                <label><i class="fas fa-chart-line"></i> Mostrar hasta día</label>
+                <input type="number" id="rangoMax" value="35">
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="btnGuardarPuntos" class="btn-primary"><i class="fas fa-save"></i> Guardar cambios del producto</button>
+            <button id="btnCalcular" class="btn-primary"><i class="fas fa-calculator"></i> Calcular gasto acumulado</button>
+        </div>
+    </div>
+
+    <!-- PESTAÑAS DE MÉTODOS -->
+    <div class="tabs">
+        <button class="tablink active" data-tab="tabTrapecio"><i class="fas fa-chart-line"></i> Trapecio</button>
+        <button class="tablink" data-tab="tabSimpson13"><i class="fas fa-chart-area"></i> Simpson 1/3</button>
+        <button class="tablink" data-tab="tabSimpson38"><i class="fas fa-chart-area"></i> Simpson 3/8</button>
+        <button class="tablink" data-tab="tabComparacion"><i class="fas fa-chart-gantt"></i> Análisis de resultados</button>
+    </div>
+
+    <!-- PESTAÑA TRAPECIO -->
+    <div id="tabTrapecio" class="tabcontent active">
+        <h2><i class="fas fa-chart-line"></i> Regla del Trapecio</h2>
+        <p class="algo-desc"><strong>Algoritmo:</strong> ∫f(x)dx ≈ (h/2)[f(x₀) + 2f(x₁) + ... + 2f(xₙ₋₁) + f(xₙ)]</p>
+        <div class="results-grid">
+            <div class="grafico-container">
+                <canvas id="chartTrapecio" style="width:100%; height:350px;"></canvas>
+            </div>
+            <div class="info-container">
+                <div class="stats-card">
+                    <h4><i class="fas fa-coins"></i> Gasto acumulado</h4>
+                    <p id="trapecioGastoTotal">--- Bs</p>
+                    <h4><i class="fas fa-chart-line"></i> Precio promedio</h4>
+                    <p id="trapecioPrecioPromedio">--- Bs/día</p>
+                    <h4><i class="fas fa-calculator"></i> Área bajo la curva</h4>
+                    <p id="trapecioArea">--- Bs·día</p>
+                </div>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <h3><i class="fas fa-table"></i> Detalle del cálculo por segmento</h3>
+            <table id="tablaTrapecio" class="results-table">
+                <thead><tr><th>Segmento</th><th>Intervalo [días]</th><th>h</th><th>Área del trapecio</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="interpretacion" id="trapecioInterpretacion"></div>
+    </div>
+
+    <!-- PESTAÑA SIMPSON 1/3 -->
+    <div id="tabSimpson13" class="tabcontent">
+        <h2><i class="fas fa-chart-area"></i> Simpson 1/3</h2>
+        <p class="algo-desc"><strong>Algoritmo:</strong> ∫f(x)dx ≈ (h/3)[f(x₀) + 4f(x₁) + 2f(x₂) + 4f(x₃) + ... + f(xₙ)]</p>
+        <div class="results-grid">
+            <div class="grafico-container">
+                <canvas id="chartSimpson13" style="width:100%; height:350px;"></canvas>
+            </div>
+            <div class="info-container">
+                <div class="stats-card">
+                    <h4><i class="fas fa-coins"></i> Gasto acumulado</h4>
+                    <p id="simpson13GastoTotal">--- Bs</p>
+                    <h4><i class="fas fa-chart-line"></i> Precio promedio</h4>
+                    <p id="simpson13PrecioPromedio">--- Bs/día</p>
+                    <h4><i class="fas fa-calculator"></i> Área bajo la curva</h4>
+                    <p id="simpson13Area">--- Bs·día</p>
+                </div>
+            </div>
+        </div>
+        <div class="interpretacion" id="simpson13Interpretacion"></div>
+    </div>
+
+    <!-- PESTAÑA SIMPSON 3/8 -->
+    <div id="tabSimpson38" class="tabcontent">
+        <h2><i class="fas fa-chart-area"></i> Simpson 3/8</h2>
+        <p class="algo-desc"><strong>Algoritmo:</strong> ∫f(x)dx ≈ (3h/8)[f(x₀) + 3f(x₁) + 3f(x₂) + 2f(x₃) + ... + f(xₙ)]</p>
+        <div class="results-grid">
+            <div class="grafico-container">
+                <canvas id="chartSimpson38" style="width:100%; height:350px;"></canvas>
+            </div>
+            <div class="info-container">
+                <div class="stats-card">
+                    <h4><i class="fas fa-coins"></i> Gasto acumulado</h4>
+                    <p id="simpson38GastoTotal">--- Bs</p>
+                    <h4><i class="fas fa-chart-line"></i> Precio promedio</h4>
+                    <p id="simpson38PrecioPromedio">--- Bs/día</p>
+                    <h4><i class="fas fa-calculator"></i> Área bajo la curva</h4>
+                    <p id="simpson38Area">--- Bs·día</p>
+                </div>
+            </div>
+        </div>
+        <div class="interpretacion" id="simpson38Interpretacion"></div>
+    </div>
+
+    <!-- PESTAÑA COMPARACIÓN -->
+    <div id="tabComparacion" class="tabcontent">
+        <h2><i class="fas fa-chart-gantt"></i> Comparación de métodos de integración</h2>
+        
+        <div class="grafico-container">
+            <canvas id="chartComparacion" style="width:100%; height:350px;"></canvas>
+        </div>
+        
+        <div class="comparison-table-container">
+            <h3><i class="fas fa-table"></i> Comparación de resultados por producto</h3>
+            <div class="table-wrapper" id="tablaComparativaProductos"></div>
+        </div>
+        
+        <div class="preguntas-container">
+            <h3><i class="fas fa-question-circle"></i> Respuestas a las preguntas del desafío</h3>
+            <div class="preguntas-grid">
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-coins"></i></div>
+                    <div class="pregunta-content">
+                        <h4>Gasto familiar mensual</h4>
+                        <p id="respuestaGastoTotal">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="pregunta-content">
+                        <h4>Gasto sin inflación</h4>
+                        <p id="respuestaGastoSinInflacion">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="pregunta-content">
+                        <h4>Pérdida de poder adquisitivo</h4>
+                        <p id="respuestaPerdidaPoder">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-microscope"></i></div>
+                    <div class="pregunta-content">
+                        <h4>Método de Integración más preciso</h4>
+                        <p id="respuestaMetodoPreciso">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="pregunta-content">
+                        <h4>Producto que afectó más al gasto mensual</h4>
+                        <p id="respuestaProductoIncidente">---</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="comparacion-analisis">
+            <h3><i class="fas fa-microscope"></i> Análisis crítico del modelo</h3>
+            <div id="analisisTexto"></div>
+        </div>
+    </div>
+
+    <footer class="conclusiones">
+        <h3><i class="fas fa-clipboard-list"></i> Conclusiones y limitaciones</h3>
+        <div id="conclusionesTexto"></div>
+    </footer>
+</div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
