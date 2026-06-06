@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Escenario C | Interpolación de Precios - Métodos Numéricos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1><i class="fas fa-chart-line"></i> Escenario C: Desabastecimiento de alimentos y curva continua de precios</h1>
+        <p>Simulación numérica de abastecimiento, precios y conflicto social en contexto de crisis</p>
+        
+        <!-- CONTEXTO MEJORADO -->
+        <div class="context-box">
+            <div class="context-icon"><i class="fas fa-info-circle"></i></div>
+            <div class="context-content">
+                <strong>Contexto del problema real</strong>
+                <p>En situaciones de crisis económica y desabastecimiento, los precios de los alimentos básicos no se actualizan diariamente de forma continua. Los organismos de control y los ciudadanos solo tienen acceso a mediciones esporádicas (por ejemplo, cada 5 o 10 días). Esto genera incertidumbre sobre el costo real de la canasta familiar y dificulta la toma de decisiones.</p>
+                <p><strong>¿Por qué usamos interpolación?</strong> La interpolación numérica permite estimar precios en días intermedios donde no hay datos disponibles, reconstruyendo una curva continua que aproxima el comportamiento real del mercado. Esto ayuda a:</p>
+                <ul>
+                    <li><i class="fas fa-chart-line"></i> Visualizar la tendencia de precios día a día</li>
+                    <li><i class="fas fa-calculator"></i> Calcular el gasto acumulado con mayor precisión</li>
+                    <li><i class="fas fa-chart-bar"></i> Comparar el incremento entre diferentes productos</li>
+                    <li><i class="fas fa-brain"></i> Anticipar escenarios de inflación o especulación</li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- SELECCIÓN DE PRODUCTO -->
+    <div class="producto-card">
+        <div class="producto-header">
+            <i class="fas fa-boxes"></i>
+            <h3>Productos analizados</h3>
+        </div>
+        <div class="producto-controls">
+            <button id="btnNuevoProducto" class="btn-secondary"><i class="fas fa-plus"></i> Nuevo producto</button>
+            <button id="btnEliminarProducto" class="btn-secondary danger"><i class="fas fa-trash"></i> Eliminar producto</button>
+        </div>
+        <div class="producto-nombre-custom" id="productoCustomContainer" style="display: none;">
+            <input type="text" id="productoCustom" placeholder="Nombre del nuevo producto">
+            <button id="btnGuardarProducto" class="btn-small">Guardar</button>
+        </div>
+    </div>
+
+    <!-- MÚLTIPLES PRODUCTOS - TABS -->
+    <div class="productos-tabs" id="productosTabs">
+        <!-- Los tabs de productos se generan dinámicamente -->
+    </div>
+
+    <!-- PANEL DE DATOS - TABLA EDITABLE -->
+    <div class="params-card">
+        <div class="card-header">
+            <i class="fas fa-table"></i>
+            <h3>Datos de precios conocidos</h3>
+            <span class="badge" id="puntosCount">0 puntos</span>
+        </div>
+        
+        <div class="table-header-actions">
+            <button id="btnAgregarFila" class="btn-secondary"><i class="fas fa-plus"></i> Agregar punto</button>
+            <button id="btnCargarDefault" class="btn-secondary"><i class="fas fa-undo"></i> Cargar datos por defecto</button>
+            <button id="btnLimpiar" class="btn-secondary"><i class="fas fa-trash"></i> Limpiar tabla</button>
+        </div>
+        
+        <div class="table-wrapper">
+            <table id="tablaPuntosEditable" class="editable-table">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-calendar-day"></i> Día (x)</th>
+                        <th><i class="fas fa-dollar-sign"></i> Precio (Bs)</th>
+                        <th><i class="fas fa-tools"></i> Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaPuntosBody">
+                    <!-- Filas dinámicas -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="params-grid">
+            <div class="param">
+                <label><i class="fas fa-search"></i> Día a interpolar</label>
+                <input type="number" id="diaInterpolar" value="12" step="1">
+            </div>
+            <div class="param">
+                <label><i class="fas fa-chart-line"></i> Mostrar desde día</label>
+                <input type="number" id="rangoMin" value="0">
+            </div>
+            <div class="param">
+                <label><i class="fas fa-chart-line"></i> Mostrar hasta día</label>
+                <input type="number" id="rangoMax" value="30">
+            </div>
+        </div>
+        
+        <button id="btnActualizar" class="btn-primary"><i class="fas fa-sync-alt"></i> Actualizar interpolación</button>
+    </div>
+
+    <!-- PESTAÑAS DE MÉTODOS -->
+    <div class="tabs">
+        <button class="tablink active" data-tab="tabLagrange"><i class="fas fa-chart-simple"></i> Lagrange</button>
+        <button class="tablink" data-tab="tabNewton"><i class="fas fa-chart-line"></i> Newton</button>
+        <button class="tablink" data-tab="tabSplines"><i class="fas fa-chart-area"></i> Splines Cúbicos</button>
+        <button class="tablink" data-tab="tabComparacion"><i class="fas fa-chart-gantt"></i> Análisis de resultados</button>
+    </div>
+
+    <!-- PESTAÑA LAGRANGE -->
+    <div id="tabLagrange" class="tabcontent active">
+        <h2><i class="fas fa-calculator"></i> Interpolación de Lagrange</h2>
+        <p class="algo-desc"><strong>Algoritmo:</strong> P(x) = Σ yᵢ · Lᵢ(x), donde Lᵢ(x) = Π (x - xⱼ)/(xᵢ - xⱼ). Construye un polinomio de grado n-1.</p>
+        <div class="results-grid">
+            <div class="grafico-container">
+                <canvas id="chartLagrange" style="width:100%; height:350px;"></canvas>
+            </div>
+            <div class="info-container">
+                <div class="stats-card">
+                    <h4><i class="fas fa-dollar-sign"></i> Precio interpolado día <span id="lagrangeDia">12</span></h4>
+                    <p id="lagrangePrecio">--- Bs</p>
+                    <h4><i class="fas fa-chart-line"></i> Grado del polinomio</h4>
+                    <p id="lagrangeGrado">---</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PESTAÑA NEWTON -->
+    <div id="tabNewton" class="tabcontent">
+        <h2><i class="fas fa-chart-line"></i> Interpolación de Newton</h2>
+        <p class="algo-desc"><strong>Algoritmo:</strong> P(x) = f[x₀] + f[x₀,x₁](x-x₀) + f[x₀,x₁,x₂](x-x₀)(x-x₁) + ...</p>
+        <div class="results-grid">
+            <div class="grafico-container">
+                <canvas id="chartNewton" style="width:100%; height:350px;"></canvas>
+            </div>
+            <div class="info-container">
+                <div class="stats-card">
+                    <h4><i class="fas fa-dollar-sign"></i> Precio interpolado día <span id="newtonDia">12</span></h4>
+                    <p id="newtonPrecio">--- Bs</p>
+                    <h4><i class="fas fa-chart-line"></i> Grado del polinomio</h4>
+                    <p id="newtonGrado">---</p>
+                </div>
+            </div>
+        </div>
+        <h3><i class="fas fa-table"></i> Tabla de Diferencias Divididas</h3>
+        <div class="table-wrapper">
+            <table id="tablaNewton" class="results-table newton-table">
+                <thead id="newtonThead"></thead>
+                <tbody id="newtonTbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PESTAÑA SPLINES -->
+    <div id="tabSplines" class="tabcontent">
+        <h2><i class="fas fa-chart-area"></i> Splines Cúbicos</h2>
+        <p class="algo-desc"><strong>Algoritmo:</strong> Polinomios cúbicos entre cada par, garantizando continuidad en función, primera y segunda derivada.</p>
+        <div class="results-grid">
+            <div class="grafico-container">
+                <canvas id="chartSplines" style="width:100%; height:350px;"></canvas>
+            </div>
+            <div class="info-container">
+                <div class="stats-card">
+                    <h4><i class="fas fa-dollar-sign"></i> Precio interpolado día <span id="splinesDia">12</span></h4>
+                    <p id="splinesPrecio">--- Bs</p>
+                    <h4><i class="fas fa-chart-line"></i> Número de segmentos</h4>
+                    <p id="splinesSegmentos">---</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PESTAÑA COMPARACIÓN -->
+    <div id="tabComparacion" class="tabcontent">
+        <h2><i class="fas fa-chart-gantt"></i> Análisis de métodos</h2>
+        
+        <div class="grafico-container">
+            <canvas id="chartComparacion" style="width:100%; height:350px;"></canvas>
+        </div>
+        
+        <!-- 6 TARJETAS DE PREGUNTAS (3 arriba, 3 abajo) -->
+        <div class="preguntas-container">
+            <h3><i class="fas fa-question-circle"></i> Respuestas a las preguntas del desafío</h3>
+            <div class="preguntas-grid">
+                <!-- Fila 1 -->
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-calendar-day"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Precio en día sin dato?</h4>
+                        <p id="respuestaPrecioDia">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Comportamiento mensual?</h4>
+                        <p id="respuestaComportamiento">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Qué producto tuvo mayor incremento?</h4>
+                        <p id="respuestaMayorIncremento">---</p>
+                    </div>
+                </div>
+                <!-- Fila 2 -->
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-microscope"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Confiabilidad de interpolación?</h4>
+                        <p id="respuestaConfiabilidad">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Qué pasa si los datos son muy dispersos?</h4>
+                        <p id="respuestaDispersos">---</p>
+                    </div>
+                </div>
+                <div class="pregunta-card">
+                    <div class="pregunta-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="pregunta-content">
+                        <h4>¿Comparación métodos?</h4>
+                        <p id="respuestaComparacionMetodos">---</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="comparacion-analisis">
+            <h3><i class="fas fa-microscope"></i> Análisis crítico del modelo</h3>
+            <div id="analisisTexto"></div>
+        </div>
+    </div>
+
+    <footer class="conclusiones">
+        <h3><i class="fas fa-clipboard-list"></i> Conclusiones y limitaciones</h3>
+        <div id="conclusionesTexto"></div>
+    </footer>
+</div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
