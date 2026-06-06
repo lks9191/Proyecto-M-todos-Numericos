@@ -1,8 +1,184 @@
-// script.js
+// ==========================================
+// 1. UTILIDADES MATEMÁTICAS
+// ==========================================
 
-import { redondear, getDefaultParams, calcularDerivadas } from './utils/mathHelpers.js';
-import { simularHeun } from './modules/heun.js';
-import { simularRK4 } from './modules/rk4.js';
+function redondear(num, decimals = 2) {
+    if (num === null || isNaN(num)) return 0;
+    return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+}
+
+function calcularDerivadas(N, M, D, a, b, c, k, r) {
+    const dNdt = -a * N * M + b * D;
+    const dMdt = a * N * M - c * M * D;
+    const dDdt = k * M - r * D;
+    return { dNdt, dMdt, dDdt };
+}
+
+function getDefaultParams() {
+    return {
+        N0: 900,
+        M0: 80,
+        D0: 50,
+        a: 0.00002,
+        b: 0.03,
+        c: 0.0005,
+        k: 0.08,
+        r: 0.05,
+        tMax: 30,
+        h: 1
+    };
+}
+
+// ==========================================
+// 2. MÉTODOS NUMÉRICOS
+// ==========================================
+
+// --- Método de Heun ---
+function simularHeun(params) {
+    const { N0, M0, D0, a, b, c, k, r, tMax, h } = params;
+    
+    const nSteps = Math.ceil(tMax / h);
+    const tiempos = [];
+    const Ns = [];
+    const Ms = [];
+    const Ds = [];
+    const tabla = [];
+    
+    let N = N0;
+    let M = M0;
+    let D = D0;
+    
+    tiempos.push(0);
+    Ns.push(N);
+    Ms.push(M);
+    Ds.push(D);
+    
+    for (let i = 0; i < nSteps; i++) {
+        const t = i * h;
+        
+        // k1
+        const { dNdt: k1N, dMdt: k1M, dDdt: k1D } = calcularDerivadas(N, M, D, a, b, c, k, r);
+        
+        // Predictor
+        const N_pred = N + h * k1N;
+        const M_pred = M + h * k1M;
+        const D_pred = D + h * k1D;
+        
+        // k2
+        const { dNdt: k2N, dMdt: k2M, dDdt: k2D } = calcularDerivadas(N_pred, M_pred, D_pred, a, b, c, k, r);
+        
+        // Corrector
+        const N_next = N + (h / 2) * (k1N + k2N);
+        const M_next = M + (h / 2) * (k1M + k2M);
+        const D_next = D + (h / 2) * (k1D + k2D);
+        
+        N = N_next;
+        M = M_next;
+        D = D_next;
+        
+        const t_next = (i + 1) * h;
+        tiempos.push(redondear(t_next));
+        Ns.push(redondear(N));
+        Ms.push(redondear(M));
+        Ds.push(redondear(D));
+        
+        // Guardar para tabla (cada 5 pasos o al final)
+        if (i % 5 === 0 || i === nSteps - 1) {
+            tabla.push({
+                t: redondear(t_next),
+                N: redondear(N),
+                M: redondear(M),
+                D: redondear(D),
+                k1: `(${redondear(k1N)}, ${redondear(k1M)}, ${redondear(k1D)})`,
+                k2: `(${redondear(k2N)}, ${redondear(k2M)}, ${redondear(k2D)})`
+            });
+        }
+    }
+    
+    return { tiempos, Ns, Ms, Ds, tabla };
+}
+
+// --- Método de Runge-Kutta 4 (RK4) ---
+function simularRK4(params) {
+    const { N0, M0, D0, a, b, c, k, r, tMax, h } = params;
+    
+    const nSteps = Math.ceil(tMax / h);
+    const tiempos = [];
+    const Ns = [];
+    const Ms = [];
+    const Ds = [];
+    const tabla = [];
+    
+    let N = N0;
+    let M = M0;
+    let D = D0;
+    
+    tiempos.push(0);
+    Ns.push(N);
+    Ms.push(M);
+    Ds.push(D);
+    
+    for (let i = 0; i < nSteps; i++) {
+        const t = i * h;
+        
+        // k1
+        const { dNdt: k1N, dMdt: k1M, dDdt: k1D } = calcularDerivadas(N, M, D, a, b, c, k, r);
+        
+        // k2
+        const N_k2 = N + (h / 2) * k1N;
+        const M_k2 = M + (h / 2) * k1M;
+        const D_k2 = D + (h / 2) * k1D;
+        const { dNdt: k2N, dMdt: k2M, dDdt: k2D } = calcularDerivadas(N_k2, M_k2, D_k2, a, b, c, k, r);
+        
+        // k3
+        const N_k3 = N + (h / 2) * k2N;
+        const M_k3 = M + (h / 2) * k2M;
+        const D_k3 = D + (h / 2) * k2D;
+        const { dNdt: k3N, dMdt: k3M, dDdt: k3D } = calcularDerivadas(N_k3, M_k3, D_k3, a, b, c, k, r);
+        
+        // k4
+        const N_k4 = N + h * k3N;
+        const M_k4 = M + h * k3M;
+        const D_k4 = D + h * k3D;
+        const { dNdt: k4N, dMdt: k4M, dDdt: k4D } = calcularDerivadas(N_k4, M_k4, D_k4, a, b, c, k, r);
+        
+        // Actualizar
+        const N_next = N + (h / 6) * (k1N + 2 * k2N + 2 * k3N + k4N);
+        const M_next = M + (h / 6) * (k1M + 2 * k2M + 2 * k3M + k4M);
+        const D_next = D + (h / 6) * (k1D + 2 * k2D + 2 * k3D + k4D);
+        
+        N = N_next;
+        M = M_next;
+        D = D_next;
+        
+        const t_next = (i + 1) * h;
+        tiempos.push(redondear(t_next));
+        Ns.push(redondear(N));
+        Ms.push(redondear(M));
+        Ds.push(redondear(D));
+        
+        // Guardar para tabla
+        if (i % 5 === 0 || i === nSteps - 1) {
+            tabla.push({
+                t: redondear(t_next),
+                N: redondear(N),
+                M: redondear(M),
+                D: redondear(D),
+                k1: `(${redondear(k1N)}, ${redondear(k1M)}, ${redondear(k1D)})`,
+                k2: `(${redondear(k2N)}, ${redondear(k2M)}, ${redondear(k2D)})`,
+                k3: `(${redondear(k3N)}, ${redondear(k3M)}, ${redondear(k3D)})`,
+                k4: `(${redondear(k4N)}, ${redondear(k4M)}, ${redondear(k4D)})`
+            });
+        }
+    }
+    
+    return { tiempos, Ns, Ms, Ds, tabla };
+}
+
+
+// ==========================================
+// 3. LÓGICA DE LA INTERFAZ
+// ==========================================
 
 let chartHeun, chartRK4, chartComparacion;
 let resultadosHeun = null;
@@ -166,7 +342,7 @@ function simular() {
         chartComparacion.update();
     }
     
-// ========== PREGUNTAS DEL DESAFÍO  ==========
+    // ========== PREGUNTAS DEL DESAFÍO  ==========
     const M_final_heun = resultadosHeun.Ms[resultadosHeun.Ms.length - 1];
     const M_inicial = params.M0;
     
@@ -204,7 +380,7 @@ function simular() {
     // Manifestantes
     document.getElementById('respuestaManifestantes').innerHTML = `Los manifestantes <strong style="color:${M_tendencia_color}">${M_tendencia}</strong> durante la simulación. Pasan de ${redondear(M_inicial)} a ${redondear(M_final_heun)}.`;
     
-    // Efecto de mejorar diálogo (c) - CON MANEJO DE ERRORES
+    // Efecto de mejorar diálogo (c)
     const paramsAltoDialogo = { ...params, c: params.c * 2 };
     const simHeunAltoC = simularHeun(paramsAltoDialogo);
     const M_final_altoC = simHeunAltoC.Ms[simHeunAltoC.Ms.length - 1];
@@ -224,7 +400,7 @@ function simular() {
     }
     document.getElementById('respuestaDialogo').innerHTML = `Mejorar la tasa de diálogo (c) al ${(params.c * 2).toFixed(4)} reduce los manifestantes en ${reduccionPorcentual}. El diálogo efectivo es clave para la desescalada.`;
     
-    // Sin mediadores - CON MANEJO DE ERRORES
+    // Sin mediadores
     const paramsSinMediadores = { ...params, k: 0, D0: 0 };
     const simHeunSinM = simularHeun(paramsSinMediadores);
     const M_final_sinM = simHeunSinM.Ms[simHeunSinM.Ms.length - 1];
@@ -250,12 +426,11 @@ function simular() {
     }
     document.getElementById('respuestaSinMediadores').innerHTML = `Sin mediadores (k=0, D₀=0), los manifestantes ${aumentoPorcentual}. La ausencia de diálogo agrava el conflicto.`;
     
-    // Parámetros para masificación - CON VALORES REALISTAS
+    // Parámetros para masificación
     const umbralA = params.a * 2.5;
     const umbralC = params.c * 0.4;
     const umbralK = params.k * 0.3;
     
-    // Simular con parámetros altos para ver si realmente hay masificación
     const paramsMasificacion = { ...params, a: umbralA, c: umbralC, k: umbralK };
     const simMasificacion = simularHeun(paramsMasificacion);
     const M_final_masivo = simMasificacion.Ms[simMasificacion.Ms.length - 1];
@@ -306,7 +481,6 @@ function simular() {
 
 function resetDefault() {
     cargarParametrosPorDefecto();
-    simular();
 }
 
 function setupTabs() {

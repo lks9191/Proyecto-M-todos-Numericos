@@ -24,7 +24,6 @@
             </div>
         </div>
 
-        <!-- MODELO MATEMÁTICO -->
         <div class="modelo-box">
             <div class="modelo-header">
                 <i class="fas fa-square-root-alt"></i>
@@ -57,7 +56,6 @@
         </div>
     </header>
 
-    <!-- PANEL DE PARÁMETROS -->
     <div class="params-card">
         <div class="card-header">
             <i class="fas fa-sliders-h"></i>
@@ -123,14 +121,12 @@
         </div>
     </div>
 
-    <!-- PESTAÑAS DE MÉTODOS -->
     <div class="tabs">
         <button class="tablink active" data-tab="tabHeun"><i class="fas fa-chart-line"></i> Heun (Euler mejorado)</button>
         <button class="tablink" data-tab="tabRK4"><i class="fas fa-chart-area"></i> Runge-Kutta 4 (RK4)</button>
         <button class="tablink" data-tab="tabComparacion"><i class="fas fa-chart-gantt"></i> Análisis de Resultados</button>
     </div>
 
-    <!-- PESTAÑA HEUN -->
     <div id="tabHeun" class="tabcontent active">
         <h2><i class="fas fa-chart-line"></i> Método de Heun</h2>
         <p class="algo-desc"><strong>Algoritmo:</strong> Predictor: y* = yₙ + h·f(tₙ, yₙ) → Corrector: yₙ₊₁ = yₙ + (h/2)·[f(tₙ, yₙ) + f(tₙ₊₁, y*)]</p>
@@ -170,7 +166,6 @@
         <div class="interpretacion" id="heunInterpretacion"></div>
     </div>
 
-    <!-- PESTAÑA RK4 -->
     <div id="tabRK4" class="tabcontent">
         <h2><i class="fas fa-chart-area"></i> Runge-Kutta 4to orden (RK4)</h2>
         <p class="algo-desc"><strong>Algoritmo:</strong> k₁ = f(tₙ, yₙ), k₂ = f(tₙ + h/2, yₙ + h·k₁/2), k₃ = f(tₙ + h/2, yₙ + h·k₂/2), k₄ = f(tₙ + h, yₙ + h·k₃), yₙ₊₁ = yₙ + (h/6)(k₁ + 2k₂ + 2k₃ + k₄)</p>
@@ -212,7 +207,6 @@
         <div class="interpretacion" id="rk4Interpretacion"></div>
     </div>
 
-    <!-- PESTAÑA COMPARACIÓN -->
     <div id="tabComparacion" class="tabcontent">
         <h2><i class="fas fa-chart-gantt"></i> Comparación de métodos</h2>
         
@@ -273,6 +267,6 @@
     </footer>
 </div>
 
-<script type="module" src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
