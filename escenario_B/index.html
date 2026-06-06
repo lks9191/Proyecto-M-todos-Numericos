@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escenario B — Vaciado de Reservas de Carburantes</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════ HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="brand-text">
+          <span class="brand-title">Escenario B</span>
+          <span class="brand-sub">Métodos Numéricos</span>
+        </div>
+      </div>
+      <nav class="header-nav">
+        <a href="#contexto" class="nav-link">Contexto</a>
+        <a href="#modelo" class="nav-link">Modelo</a>
+        <a href="#simulacion" class="nav-link">Simulación</a>
+        <a href="#conclusiones" class="nav-link">Conclusiones</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════ HERO -->
+  <section class="hero" id="contexto">
+    <div class="hero-grid-bg"></div>
+    <div class="container">
+      <div class="hero-tag">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        Simulación numérica de crisis energética
+      </div>
+      <h1 class="hero-title">Vaciado crítico de<br/><em>reservas de carburantes</em></h1>
+      <p class="hero-desc">
+        Cuando la demanda supera el reabastecimiento, cada hora cuenta.
+        Este simulador modela matemáticamente cómo se vacían las reservas
+        de una planta de carburantes bajo tres escenarios de consumo,
+        usando métodos numéricos de resolución de ecuaciones diferenciales.
+      </p>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">3</span>
+          <span class="stat-label">Métodos numéricos</span>
+        </div>
+        <div class="stat-div"></div>
+        <div class="stat">
+          <span class="stat-num">R'(t)</span>
+          <span class="stat-label">EDO de vaciado</span>
+        </div>
+        <div class="stat-div"></div>
+        <div class="stat">
+          <span class="stat-num">4</span>
+          <span class="stat-label">Preguntas respondidas</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ CONTEXTO REAL -->
+  <section class="section-context">
+    <div class="container">
+      <div class="context-grid">
+        <div class="context-card accent-red">
+          <div class="ctx-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3>Contexto del problema real</h3>
+          <p>Bolivia atraviesa una crisis de abastecimiento de carburantes. La demanda diaria supera la capacidad de reabastecimiento de las plantas, generando colas, pánico de compra y vaciado acelerado de reservas.</p>
+        </div>
+        <div class="context-card accent-amber">
+          <div class="ctx-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 6.5h11l1 7H5.5l1-7z"/><path d="M2 3h2l.5 3M22 3h-2l-.5 3"/><circle cx="8.5" cy="17" r="1.5"/><circle cx="15.5" cy="17" r="1.5"/></svg>
+          </div>
+          <h3>Variables del sistema</h3>
+          <p><strong>R(t)</strong> = reserva disponible (litros). <strong>Entrada</strong> = abastecimiento diario (constante o reducido). <strong>Consumo</strong> = demanda normal + factor de pánico o bloqueo.</p>
+        </div>
+        <div class="context-card accent-blue">
+          <div class="ctx-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          </div>
+          <h3>Ecuación diferencial central</h3>
+          <p>El modelo se reduce a una EDO de primer orden: <code>R'(t) = E(t) − C(t)</code>, donde E es la tasa de entrada y C la tasa de consumo. Se resuelve numéricamente con Euler, Heun y RK4.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ MODELO MATEMÁTICO -->
+  <section class="section-model" id="modelo">
+    <div class="container">
+      <div class="section-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        Modelo matemático
+      </div>
+      <h2 class="section-title">La ecuación diferencial del vaciado</h2>
+
+      <div class="model-layout">
+        <div class="model-equations">
+          <div class="eq-block">
+            <div class="eq-label">Ecuación principal</div>
+            <div class="eq-formula">R'(t) = E − α · C · R(t)</div>
+            <div class="eq-desc">La variación de reserva es igual a la entrada menos el consumo proporcional a la reserva existente.</div>
+          </div>
+          <div class="eq-block">
+            <div class="eq-label">Solución con Euler</div>
+            <div class="eq-formula">R<sub>i+1</sub> = R<sub>i</sub> + h · f(t<sub>i</sub>, R<sub>i</sub>)</div>
+            <div class="eq-desc">Método explícito de primer orden. Simple pero puede acumular error.</div>
+          </div>
+          <div class="eq-block">
+            <div class="eq-label">Solución con Heun</div>
+            <div class="eq-formula">R<sub>i+1</sub> = R<sub>i</sub> + (h/2)[f(t<sub>i</sub>,R<sub>i</sub>) + f(t<sub>i</sub>+h, R̃<sub>i+1</sub>)]</div>
+            <div class="eq-desc">Predictor-corrector de segundo orden. Más preciso que Euler.</div>
+          </div>
+          <div class="eq-block">
+            <div class="eq-label">Solución con RK4</div>
+            <div class="eq-formula">R<sub>i+1</sub> = R<sub>i</sub> + (1/6)(k<sub>1</sub> + 2k<sub>2</sub> + 2k<sub>3</sub> + k<sub>4</sub>)</div>
+            <div class="eq-desc">Cuarto orden. El más preciso de los tres métodos implementados.</div>
+          </div>
+        </div>
+
+        <div class="model-params-box">
+          <div class="params-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            Parámetros del modelo
+          </div>
+          <div class="params-list">
+            <div class="param-row"><span class="param-sym">R(0)</span><span class="param-name">Reserva inicial</span></div>
+            <div class="param-row"><span class="param-sym">E</span><span class="param-name">Tasa de entrada (L/día)</span></div>
+            <div class="param-row"><span class="param-sym">C</span><span class="param-name">Tasa base de consumo (L/día)</span></div>
+            <div class="param-row"><span class="param-sym">α</span><span class="param-name">Factor de pánico/bloqueo</span></div>
+            <div class="param-row"><span class="param-sym">R<sub>crit</sub></span><span class="param-name">Nivel crítico de reserva</span></div>
+            <div class="param-row"><span class="param-sym">h</span><span class="param-name">Paso de tiempo (días)</span></div>
+            <div class="param-row"><span class="param-sym">T</span><span class="param-name">Tiempo total de simulación</span></div>
+          </div>
+          <div class="params-note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
+            El nivel crítico R<sub>crit</sub> representa el umbral a partir del cual la planta entra en emergencia operativa.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ SIMULADOR -->
+  <section class="section-sim" id="simulacion">
+    <div class="container">
+      <div class="section-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Simulador interactivo
+      </div>
+      <h2 class="section-title">Configurar y ejecutar simulación</h2>
+
+      <!-- FORM -->
+      <div class="sim-layout">
+        <aside class="sim-panel">
+          <div class="panel-section">
+            <div class="panel-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+              Condiciones iniciales
+            </div>
+            <div class="form-group">
+              <label for="reservaInicial">Reserva inicial R(0) <span class="unit">(litros)</span></label>
+              <input type="number" id="reservaInicial" value="500000" min="1000" step="1000" />
+            </div>
+            <div class="form-group">
+              <label for="nivelCritico">Nivel crítico R<sub>crit</sub> <span class="unit">(litros)</span></label>
+              <input type="number" id="nivelCritico" value="50000" min="0" step="1000" />
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+              Tasas del sistema
+            </div>
+            <div class="form-group">
+              <label for="tasaEntrada">Tasa de entrada E <span class="unit">(L/día)</span></label>
+              <input type="number" id="tasaEntrada" value="30000" min="0" step="1000" />
+            </div>
+            <div class="form-group">
+              <label for="tasaConsumo">Tasa base de consumo C <span class="unit">(L/día)</span></label>
+              <input type="number" id="tasaConsumo" value="50000" min="0" step="1000" />
+            </div>
+            <div class="form-group">
+              <label for="factorPanico">Factor de pánico α <span class="unit">(0 = normal, 1 = doble)</span></label>
+              <input type="number" id="factorPanico" value="0.2" min="0" max="2" step="0.05" />
+              <div class="range-hint">
+                <span>Sin pánico (0)</span><span>Pánico total (2)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-section-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Parámetros numéricos
+            </div>
+            <div class="form-group">
+              <label for="pasoH">Paso de tiempo h <span class="unit">(días)</span></label>
+              <input type="number" id="pasoH" value="0.5" min="0.01" max="2" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label for="tiempoTotal">Tiempo total T <span class="unit">(días)</span></label>
+              <input type="number" id="tiempoTotal" value="30" min="5" max="180" step="1" />
+            </div>
+          </div>
+
+          <button class="btn-run" id="btnSimular" onclick="ejecutarSimulacion()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Ejecutar simulación
+          </button>
+
+          <button class="btn-reset" onclick="resetearParametros()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Restaurar valores
+          </button>
+        </aside>
+
+        <!-- RESULTS -->
+        <div class="sim-results" id="simResults">
+          <div class="results-empty" id="emptyState">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            <p>Configura los parámetros y ejecuta la simulación para ver los resultados.</p>
+          </div>
+
+          <div class="results-content" id="resultsContent" style="display:none">
+
+            <!-- Alertas -->
+            <div class="alerts-row" id="alertsRow"></div>
+
+            <!-- Tabs de métodos -->
+            <div class="method-tabs">
+              <button class="tab-btn active" onclick="switchTab('euler', this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M5 20V10l7-7 7 7v10"/></svg>
+                Euler
+              </button>
+              <button class="tab-btn" onclick="switchTab('heun', this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M5 20V10l7-7 7 7v10"/><path d="M9 20v-5h6v5"/></svg>
+                Heun
+              </button>
+              <button class="tab-btn" onclick="switchTab('rk4', this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M5 20V10l7-7 7 7v10"/><path d="M9 20v-5h6v5"/><circle cx="12" cy="5" r="2"/></svg>
+                Runge-Kutta 4
+              </button>
+              <button class="tab-btn" onclick="switchTab('comparacion', this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Comparación
+              </button>
+            </div>
+
+            <!-- Tab: Euler -->
+            <div class="tab-content active" id="tab-euler">
+              <div class="method-header">
+                <div class="method-info">
+                  <h3>Método de Euler</h3>
+                  <p>Método explícito de primer orden. Avanza la solución usando la pendiente al inicio de cada intervalo.</p>
+                  <div class="algo-box">
+                    <div class="algo-title">Algoritmo</div>
+                    <code>R<sub>i+1</sub> = R<sub>i</sub> + h · f(t<sub>i</sub>, R<sub>i</sub>)</code><br/>
+                    <code>f(t, R) = E − C · (1 + α) cuando R > 0</code>
+                  </div>
+                </div>
+                <div class="method-kpis" id="kpi-euler"></div>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-euler"></canvas>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table" id="table-euler">
+                  <thead><tr><th>Paso</th><th>t (días)</th><th>R(t) (litros)</th><th>f(t,R)</th><th>Estado</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tab: Heun -->
+            <div class="tab-content" id="tab-heun">
+              <div class="method-header">
+                <div class="method-info">
+                  <h3>Método de Heun</h3>
+                  <p>Predictor-corrector de segundo orden. Promedia las pendientes al inicio y al final del intervalo para mayor precisión.</p>
+                  <div class="algo-box">
+                    <div class="algo-title">Algoritmo</div>
+                    <code>Predictor: R̃ = R<sub>i</sub> + h · f(t<sub>i</sub>, R<sub>i</sub>)</code><br/>
+                    <code>Corrector: R<sub>i+1</sub> = R<sub>i</sub> + (h/2)[f(t<sub>i</sub>,R<sub>i</sub>) + f(t<sub>i+1</sub>,R̃)]</code>
+                  </div>
+                </div>
+                <div class="method-kpis" id="kpi-heun"></div>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-heun"></canvas>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table" id="table-heun">
+                  <thead><tr><th>Paso</th><th>t (días)</th><th>R(t) (litros)</th><th>Predictor R̃</th><th>Estado</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tab: RK4 -->
+            <div class="tab-content" id="tab-rk4">
+              <div class="method-header">
+                <div class="method-info">
+                  <h3>Runge-Kutta de 4to Orden</h3>
+                  <p>El método más preciso de los tres. Combina cuatro evaluaciones de la función para obtener una aproximación de cuarto orden.</p>
+                  <div class="algo-box">
+                    <div class="algo-title">Algoritmo</div>
+                    <code>k<sub>1</sub>=hf(t<sub>i</sub>,R<sub>i</sub>), k<sub>2</sub>=hf(t<sub>i</sub>+h/2, R<sub>i</sub>+k<sub>1</sub>/2)</code><br/>
+                    <code>k<sub>3</sub>=hf(t<sub>i</sub>+h/2, R<sub>i</sub>+k<sub>2</sub>/2), k<sub>4</sub>=hf(t<sub>i</sub>+h, R<sub>i</sub>+k<sub>3</sub>)</code><br/>
+                    <code>R<sub>i+1</sub> = R<sub>i</sub> + (1/6)(k<sub>1</sub>+2k<sub>2</sub>+2k<sub>3</sub>+k<sub>4</sub>)</code>
+                  </div>
+                </div>
+                <div class="method-kpis" id="kpi-rk4"></div>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-rk4"></canvas>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table" id="table-rk4">
+                  <thead><tr><th>Paso</th><th>t (días)</th><th>R(t) (litros)</th><th>k₁</th><th>k₂</th><th>k₃</th><th>k₄</th><th>Estado</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tab: Comparación -->
+            <div class="tab-content" id="tab-comparacion">
+              <div class="comp-header">
+                <h3>Comparación de los tres métodos</h3>
+                <p>Visualización simultánea de Euler, Heun y RK4 sobre el mismo sistema de ecuaciones.</p>
+              </div>
+              <div class="chart-container tall">
+                <canvas id="chart-comparacion"></canvas>
+              </div>
+              <div class="comp-table-wrap">
+                <table class="data-table comp-table" id="table-comparacion">
+                  <thead>
+                    <tr>
+                      <th>t (días)</th>
+                      <th>Euler (L)</th>
+                      <th>Heun (L)</th>
+                      <th>RK4 (L)</th>
+                      <th>Δ Euler–RK4</th>
+                      <th>Δ Heun–RK4</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="interp-box" id="interpBox"></div>
+            </div>
+
+          </div><!-- /results-content -->
+        </div><!-- /sim-results -->
+      </div><!-- /sim-layout -->
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ CONCLUSIONES -->
+  <section class="section-conclusions" id="conclusiones">
+    <div class="container">
+      <div class="section-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Interpretación y conclusiones
+      </div>
+      <h2 class="section-title">Lo que el modelo nos dice</h2>
+
+      <div class="conclusions-grid">
+        <div class="concl-card">
+          <div class="concl-num">01</div>
+          <h4>Días hasta nivel crítico</h4>
+          <p>Cuando el consumo supera la entrada, la reserva cae exponencialmente. Un aumento del 20% en el factor de pánico puede reducir el tiempo crítico a la mitad.</p>
+        </div>
+        <div class="concl-card">
+          <div class="concl-num">02</div>
+          <h4>Efecto del consumo creciente</h4>
+          <p>Un incremento en la tasa base de consumo acelera el vaciado de forma no lineal. No es proporcional: duplicar el consumo puede cuadruplicar el impacto.</p>
+        </div>
+        <div class="concl-card">
+          <div class="concl-num">03</div>
+          <h4>Reducción del abastecimiento</h4>
+          <p>Disminuir la tasa de entrada tiene un efecto más severo que aumentar el consumo cuando la reserva es baja, porque elimina el "colchón" de recuperación.</p>
+        </div>
+        <div class="concl-card">
+          <div class="concl-num">04</div>
+          <h4>Estabilidad de cada método</h4>
+          <p>RK4 es el más estable y preciso. Heun mejora significativamente a Euler con solo un paso corrector adicional. Euler acumula error en pasos grandes.</p>
+        </div>
+        <div class="concl-card">
+          <div class="concl-num">05</div>
+          <h4>Diferencia Euler vs Heun vs RK4</h4>
+          <p>La diferencia entre métodos es observable en la tabla de comparación. Con h pequeño (0.1 día), los tres convergen. Con h grande (1 día), Euler diverge notablemente.</p>
+        </div>
+        <div class="concl-card accent">
+          <div class="concl-num">Lim.</div>
+          <h4>Limitaciones del modelo</h4>
+          <p>El modelo asume una tasa de consumo constante y no contempla: cambios estacionales, distribución geográfica, múltiples plantas, ni comportamiento no lineal del pánico social.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span>Escenario B — Métodos Numéricos</span>
+        </div>
+        <div class="footer-right">
+          Universidad Mayor de San Andrés · Facultad de Ciencias Puras
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/metodosB.js"></script>
+  <script src="js/simuladorB.js"></script>
+  <script src="js/graficosB.js"></script>
+</body>
+</html>
