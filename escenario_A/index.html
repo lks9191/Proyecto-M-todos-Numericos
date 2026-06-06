@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escenario A — Red de Abastecimiento</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="badge">Escenario A · Métodos Numéricos</div>
+    <h1>Red de Abastecimiento<br>y Transporte</h1>
+    <p class="subtitle">Simulación de distribución de recursos desde plantas de origen hacia zonas urbanas mediante sistemas de ecuaciones lineales</p>
+  </header>
+
+  <div class="context-box">
+    <strong>¿Qué se simula aquí?</strong><br>
+    Se modela una ciudad con <strong>3 plantas de origen</strong> (centros de acopio o refinerías) y <strong>3 zonas de destino</strong> (Norte, Centro, Sur). Cada zona tiene una demanda mínima, y cada planta tiene una capacidad máxima. El sistema de ecuaciones lineales Ax = b representa las restricciones de flujo. Se resuelve con distintos métodos iterativos y directos para encontrar cuánto debe enviar cada planta a cada zona. También se simula el efecto de <strong>bloqueos de rutas</strong> sobre el abastecimiento.
+  </div>
+
+  <div class="section">
+    <div class="section-title">⚙ <span>//</span> Configuración del sistema</div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label>Capacidad Planta 1 (unidades/día)</label>
+        <input type="number" id="cap1" value="100" min="0">
+      </div>
+      <div class="field">
+        <label>Capacidad Planta 2 (unidades/día)</label>
+        <input type="number" id="cap2" value="80" min="0">
+      </div>
+      <div class="field">
+        <label>Capacidad Planta 3 (unidades/día)</label>
+        <input type="number" id="cap3" value="60" min="0">
+      </div>
+      <div class="field">
+        <label>Demanda Zona Norte</label>
+        <input type="number" id="dn" value="90" min="0">
+      </div>
+      <div class="field">
+        <label>Demanda Zona Centro</label>
+        <input type="number" id="dc" value="85" min="0">
+      </div>
+      <div class="field">
+        <label>Demanda Zona Sur</label>
+        <input type="number" id="ds" value="65" min="0">
+      </div>
+    </div>
+
+    <hr class="sep">
+    <div class="section-title">📐 <span>//</span> Matriz de costos de transporte A (3×3)</div>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem;font-family:'JetBrains Mono',monospace;">Costo unitario de envío desde planta i hacia zona j</p>
+    <div class="matrix-wrap">
+      <table class="matrix-table" id="matA">
+        <thead>
+          <tr><th></th><th>Zona Norte</th><th>Zona Centro</th><th>Zona Sur</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>Planta 1</th><td><input type="number" id="a11" value="4"></td><td><input type="number" id="a12" value="8"></td><td><input type="number" id="a13" value="6"></td></tr>
+          <tr><th>Planta 2</th><td><input type="number" id="a21" value="7"></td><td><input type="number" id="a22" value="3"></td><td><input type="number" id="a23" value="9"></td></tr>
+          <tr><th>Planta 3</th><td><input type="number" id="a31" value="5"></td><td><input type="number" id="a32" value="6"></td><td><input type="number" id="a33" value="2"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="sep">
+    <div class="section-title">🔬 <span>//</span> Método de resolución</div>
+    <div class="method-pills">
+      <div class="pill active" data-method="gauss-seidel">Gauss-Seidel</div>
+      <div class="pill" data-method="jacobi">Jacobi</div>
+      <div class="pill" data-method="sor">SOR</div>
+      <div class="pill" data-method="lu">Descomposición LU</div>
+      <div class="pill" data-method="cgc">Gradiente Conjugado</div>
+    </div>
+
+    <div class="grid-2" style="margin-top:1rem">
+      <div class="field">
+        <label>Tolerancia (ε)</label>
+        <input type="number" id="tol" value="0.0001" step="0.00001">
+      </div>
+      <div class="field">
+        <label>Máx. iteraciones</label>
+        <input type="number" id="maxiter" value="100" min="5">
+      </div>
+      <div class="field" id="sor-field" style="display:none">
+        <label>Factor de relajación ω (SOR)</label>
+        <input type="number" id="omega" value="1.25" step="0.05" min="0.1" max="1.99">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runSolver()">▶ Resolver sistema</button>
+    </div>
+  </div>
+
+  <div class="section result-panel" id="resultPanel">
+    <div class="section-title">📊 <span>//</span> Resultados</div>
+    <div class="result-grid" id="resultGrid"></div>
+    <div class="alert" id="convAlert"></div>
+    <div class="iter-table-wrap">
+      <table class="iter-table" id="iterTable">
+        <thead><tr id="iterHead"></tr></thead>
+        <tbody id="iterBody"></tbody>
+      </table>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chartFlow" height="220"></canvas>
+    </div>
+    <div class="interp visible" id="interpBox">
+      <h4>💡 Interpretación de resultados</h4>
+      <div id="interpContent"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🚧 <span>//</span> Simulación de bloqueos</div>
+    <p style="font-size:0.83rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:1rem;">Simula qué pasa si una ruta específica queda bloqueada (costo → ∞, capacidad → 0)</p>
+
+    <div class="blockage-row">
+      <label>Bloquear ruta:</label>
+      <select id="blockRoute" style="background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--text);padding:0.5rem;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:0.82rem;">
+        <option value="">— Sin bloqueo —</option>
+        <option value="0-0">Planta 1 → Zona Norte</option>
+        <option value="0-1">Planta 1 → Zona Centro</option>
+        <option value="0-2">Planta 1 → Zona Sur</option>
+        <option value="1-0">Planta 2 → Zona Norte</option>
+        <option value="1-1">Planta 2 → Zona Centro</option>
+        <option value="1-2">Planta 2 → Zona Sur</option>
+        <option value="2-0">Planta 3 → Zona Norte</option>
+        <option value="2-1">Planta 3 → Zona Centro</option>
+        <option value="2-2">Planta 3 → Zona Sur</option>
+      </select>
+      <button class="btn btn-danger" onclick="runBlockage()">⚡ Simular bloqueo</button>
+    </div>
+    <div class="alert" id="blockAlert"></div>
+    <div class="chart-wrap" style="display:none;" id="blockChartWrap">
+      <canvas id="chartBlock" height="200"></canvas>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📈 <span>//</span> Análisis de sensibilidad</div>
+    <p style="font-size:0.83rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:1rem;">¿Cómo cambia la solución si la demanda aumenta un porcentaje?</p>
+    <div class="grid-2">
+      <div class="field">
+        <label>Incremento de demanda (%)</label>
+        <input type="number" id="demandIncrease" value="20" min="1" max="200">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runSensitivity()">📊 Analizar sensibilidad</button>
+    </div>
+    <div class="chart-wrap" style="display:none;" id="sensChartWrap">
+      <canvas id="chartSens" height="220"></canvas>
+    </div>
+    <div class="interp" id="sensInterp">
+      <h4>💡 Interpretación</h4>
+      <div id="sensInterpContent"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Escenario A · Optimización de Red de Abastecimiento · Métodos Numéricos
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

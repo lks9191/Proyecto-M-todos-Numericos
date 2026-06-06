@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escenario F — Rumores y Pánico</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="badge-f">Escenario F · Métodos Numéricos</div>
+    <h1>Rumores de Desabastecimiento<br>y Pánico en la Red</h1>
+    <p class="subtitle">Modelado de sistemas lineales mal condicionados: cómo un pequeño cambio en la información o percepción social genera grandes cambios en la demanda de distribución</p>
+  </header>
+
+  <div class="context-box">
+    <strong>¿Qué se simula aquí?</strong><br>
+    Se modela una red de distribución de 3 zonas (Norte, Centro, Sur) donde el rumor altera la demanda. El sistema Ax = b representa el flujo de abastecimiento. Al introducir <strong>perturbaciones en b</strong> (rumor → incremento artificial de demanda) se observa cuánto cambia la solución x.<br>
+    Un sistema con <strong>número de condición κ(A) alto</strong> es "mal condicionado": pequeños rumores generan catástrofes en el abastecimiento. Un κ cercano a 1 es estable.<br>
+    Se analiza: <strong>número de condición, perturbación relativa, zonas vulnerables</strong>.
+  </div>
+
+  <div class="section">
+    <div class="section-title">📢 <span>//</span> Nivel de rumor social</div>
+    <div class="rumor-levels">
+      <div class="rumor-card active" onclick="setRumor(0, this)" id="rl0">
+        <div class="rl-icon">😐</div>
+        <div class="rl-name">Sin rumor</div>
+        <div class="rl-pct">+0%</div>
+        <div class="rl-desc">Demanda normal, sin perturbación</div>
+      </div>
+      <div class="rumor-card" onclick="setRumor(1, this)" id="rl1">
+        <div class="rl-icon">👂</div>
+        <div class="rl-name">Rumor bajo</div>
+        <div class="rl-pct">+5%</div>
+        <div class="rl-desc">Pequeño murmullo en redes</div>
+      </div>
+      <div class="rumor-card" onclick="setRumor(2, this)" id="rl2">
+        <div class="rl-icon">😰</div>
+        <div class="rl-name">Rumor medio</div>
+        <div class="rl-pct">+20%</div>
+        <div class="rl-desc">Alarma social moderada</div>
+      </div>
+      <div class="rumor-card" onclick="setRumor(3, this)" id="rl3">
+        <div class="rl-icon">🚨</div>
+        <div class="rl-name">Pánico</div>
+        <div class="rl-pct">+50%</div>
+        <div class="rl-desc">Compras impulsivas masivas</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label>Perturbación personalizada en demanda (δ%)</label>
+        <input type="number" id="pertPct" value="0" min="0" max="500" step="1">
+      </div>
+      <div class="field">
+        <label>Zona más afectada por rumor</label>
+        <select id="rumorZone">
+          <option value="all">Todas las zonas por igual</option>
+          <option value="0">Zona Norte</option>
+          <option value="1">Zona Centro</option>
+          <option value="2">Zona Sur</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📐 <span>//</span> Sistema de distribución A·x = b</div>
+    <p style="font-size:0.78rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:1rem;">
+      Matriz de coeficientes A (flujos/costos de transporte). Usa valores casi linealmente dependientes para crear un sistema mal condicionado.
+    </p>
+
+    <div class="matrix-wrap">
+      <table class="matrix-table" id="matA">
+        <thead>
+          <tr><th></th><th>Zona Norte</th><th>Zona Centro</th><th>Zona Sur</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>Ec. 1</th><td><input type="number" id="a11" value="1"></td><td><input type="number" id="a12" value="2"></td><td><input type="number" id="a13" value="3"></td></tr>
+          <tr><th>Ec. 2</th><td><input type="number" id="a21" value="4"></td><td><input type="number" id="a22" value="5"></td><td><input type="number" id="a23" value="6"></td></tr>
+          <tr><th>Ec. 3</th><td><input type="number" id="a31" value="7"></td><td><input type="number" id="a32" value="8"></td><td><input type="number" id="a33" value="10"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="sep">
+    <div class="section-title">📦 <span>//</span> Demanda base b (sin rumor)</div>
+    <div class="grid-3">
+      <div class="field">
+        <label>Demanda Zona Norte</label>
+        <input type="number" id="b1" value="90">
+      </div>
+      <div class="field">
+        <label>Demanda Zona Centro</label>
+        <input type="number" id="b2" value="80">
+      </div>
+      <div class="field">
+        <label>Demanda Zona Sur</label>
+        <input type="number" id="b3" value="70">
+      </div>
+    </div>
+
+    <hr class="sep">
+    <div class="section-title">⚙ <span>//</span> Presets de matrices</div>
+    <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+      <button class="btn btn-primary" style="font-size:0.75rem;padding:0.5rem 1rem" onclick="setPreset('wellcond')">✅ Bien condicionada</button>
+      <button class="btn btn-primary" style="font-size:0.75rem;padding:0.5rem 1rem;background:linear-gradient(135deg,var(--yellow),#ca8a04);color:#000" onclick="setPreset('moderate')">⚠ Moderada</button>
+      <button class="btn btn-primary" style="font-size:0.75rem;padding:0.5rem 1rem;background:linear-gradient(135deg,var(--red),#991b1b)" onclick="setPreset('illcond')">🔴 Mal condicionada</button>
+      <button class="btn btn-primary" style="font-size:0.75rem;padding:0.5rem 1rem;background:linear-gradient(135deg,var(--accent2),#9d174d)" onclick="setPreset('hilbert')">💀 Hilbert (extrema)</button>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runAnalysis()">▶ Analizar sistema y rumor</button>
+      <button class="btn btn-secondary" onclick="runScenarios()">📊 Simular todos los niveles de rumor</button>
+    </div>
+  </div>
+
+  <div class="section result-panel" id="resultPanel">
+    <div class="section-title">📊 <span>//</span> Resultados del análisis</div>
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <div class="cond-bar-wrap">
+      <div class="cond-bar-label">Número de condición κ(A): <span id="condVal">—</span></div>
+      <div class="cond-bar-track">
+        <div class="cond-bar-fill" id="condFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="alert" id="condAlert"></div>
+
+    <div class="iter-table-wrap">
+      <table class="iter-table" id="solTable">
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Sin rumor x</th>
+            <th>Con rumor x̃</th>
+            <th>Perturbación Δx</th>
+            <th>Cambio relativo (%)</th>
+          </tr>
+        </thead>
+        <tbody id="solBody"></tbody>
+      </table>
+    </div>
+
+    <div class="chart-wrap">
+      <canvas id="chartSol" height="220"></canvas>
+    </div>
+
+    <div class="chart-wrap" id="scenChartWrap" style="display:none">
+      <canvas id="chartScen" height="240"></canvas>
+    </div>
+
+    <div id="scenTableWrap" style="display:none">
+      <div class="section-title" style="margin-top:1.5rem">📋 <span>//</span> Comparación por nivel de rumor</div>
+      <table class="scen-table" id="scenTable">
+        <thead>
+          <tr>
+            <th>Nivel de rumor</th>
+            <th>δ demanda</th>
+            <th>x₁ (Norte)</th>
+            <th>x₂ (Centro)</th>
+            <th>x₃ (Sur)</th>
+            <th>Error relativo ‖Δx‖/‖x‖</th>
+            <th>Vulnerabilidad</th>
+          </tr>
+        </thead>
+        <tbody id="scenBody"></tbody>
+      </table>
+    </div>
+
+    <div class="interp visible" id="interpBox">
+      <h4>💡 Interpretación del mal condicionamiento</h4>
+      <div id="interpContent"></div>
+    </div>
+  </div>
+
+</div>
+<footer>Escenario F · Rumores y Pánico en la Red de Distribución · Métodos Numéricos</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

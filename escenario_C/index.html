@@ -16,7 +16,6 @@
         <h1><i class="fas fa-chart-line"></i> Escenario C: Desabastecimiento de alimentos y curva continua de precios</h1>
         <p>Simulación numérica de abastecimiento, precios y conflicto social en contexto de crisis</p>
         
-        <!-- CONTEXTO MEJORADO -->
         <div class="context-box">
             <div class="context-icon"><i class="fas fa-info-circle"></i></div>
             <div class="context-content">
@@ -33,7 +32,6 @@
         </div>
     </header>
 
-    <!-- SELECCIÓN DE PRODUCTO -->
     <div class="producto-card">
         <div class="producto-header">
             <i class="fas fa-boxes"></i>
@@ -49,12 +47,9 @@
         </div>
     </div>
 
-    <!-- MÚLTIPLES PRODUCTOS - TABS -->
     <div class="productos-tabs" id="productosTabs">
-        <!-- Los tabs de productos se generan dinámicamente -->
-    </div>
+        </div>
 
-    <!-- PANEL DE DATOS - TABLA EDITABLE -->
     <div class="params-card">
         <div class="card-header">
             <i class="fas fa-table"></i>
@@ -78,8 +73,7 @@
                     </tr>
                 </thead>
                 <tbody id="tablaPuntosBody">
-                    <!-- Filas dinámicas -->
-                </tbody>
+                    </tbody>
             </table>
         </div>
         
@@ -101,7 +95,6 @@
         <button id="btnActualizar" class="btn-primary"><i class="fas fa-sync-alt"></i> Actualizar interpolación</button>
     </div>
 
-    <!-- PESTAÑAS DE MÉTODOS -->
     <div class="tabs">
         <button class="tablink active" data-tab="tabLagrange"><i class="fas fa-chart-simple"></i> Lagrange</button>
         <button class="tablink" data-tab="tabNewton"><i class="fas fa-chart-line"></i> Newton</button>
@@ -109,7 +102,6 @@
         <button class="tablink" data-tab="tabComparacion"><i class="fas fa-chart-gantt"></i> Análisis de resultados</button>
     </div>
 
-    <!-- PESTAÑA LAGRANGE -->
     <div id="tabLagrange" class="tabcontent active">
         <h2><i class="fas fa-calculator"></i> Interpolación de Lagrange</h2>
         <p class="algo-desc"><strong>Algoritmo:</strong> P(x) = Σ yᵢ · Lᵢ(x), donde Lᵢ(x) = Π (x - xⱼ)/(xᵢ - xⱼ). Construye un polinomio de grado n-1.</p>
@@ -128,7 +120,6 @@
         </div>
     </div>
 
-    <!-- PESTAÑA NEWTON -->
     <div id="tabNewton" class="tabcontent">
         <h2><i class="fas fa-chart-line"></i> Interpolación de Newton</h2>
         <p class="algo-desc"><strong>Algoritmo:</strong> P(x) = f[x₀] + f[x₀,x₁](x-x₀) + f[x₀,x₁,x₂](x-x₀)(x-x₁) + ...</p>
@@ -154,7 +145,6 @@
         </div>
     </div>
 
-    <!-- PESTAÑA SPLINES -->
     <div id="tabSplines" class="tabcontent">
         <h2><i class="fas fa-chart-area"></i> Splines Cúbicos</h2>
         <p class="algo-desc"><strong>Algoritmo:</strong> Polinomios cúbicos entre cada par, garantizando continuidad en función, primera y segunda derivada.</p>
@@ -173,7 +163,6 @@
         </div>
     </div>
 
-    <!-- PESTAÑA COMPARACIÓN -->
     <div id="tabComparacion" class="tabcontent">
         <h2><i class="fas fa-chart-gantt"></i> Análisis de métodos</h2>
         
@@ -181,11 +170,9 @@
             <canvas id="chartComparacion" style="width:100%; height:350px;"></canvas>
         </div>
         
-        <!-- 6 TARJETAS DE PREGUNTAS (3 arriba, 3 abajo) -->
         <div class="preguntas-container">
             <h3><i class="fas fa-question-circle"></i> Respuestas a las preguntas del desafío</h3>
             <div class="preguntas-grid">
-                <!-- Fila 1 -->
                 <div class="pregunta-card">
                     <div class="pregunta-icon"><i class="fas fa-calendar-day"></i></div>
                     <div class="pregunta-content">
@@ -207,7 +194,6 @@
                         <p id="respuestaMayorIncremento">---</p>
                     </div>
                 </div>
-                <!-- Fila 2 -->
                 <div class="pregunta-card">
                     <div class="pregunta-icon"><i class="fas fa-microscope"></i></div>
                     <div class="pregunta-content">
@@ -244,6 +230,6 @@
     </footer>
 </div>
 
-<script type="module" src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

@@ -1,16 +1,258 @@
-// script.js
+// ==========================================
+// 1. UTILIDADES MATEMÁTICAS Y DATOS
+// ==========================================
 
-import { redondear, getDefaultPuntos, productosDataDefault } from './utils/mathHelpers.js';
-import { interpolacionLagrange, generarCurvaLagrange } from './modules/lagrange.js';
-import { interpolacionNewton, generarTablaNewtonFormateada, generarCurvaNewton } from './modules/newton.js';
-import { calcularSplinesCubicos, interpolacionSplines, generarCurvaSplines } from './modules/splines.js';
+function redondear(num, decimals = 2) {
+    if (num === null || isNaN(num)) return 0;
+    return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+}
+
+function generarRango(inicio, fin, paso = 0.5) {
+    const resultado = [];
+    for (let i = inicio; i <= fin; i += paso) {
+        resultado.push(redondear(i, 1));
+    }
+    return resultado;
+}
+
+function calcularIncrementoPorcentual(inicial, final) {
+    if (inicial === 0) return 0;
+    return ((final - inicial) / inicial) * 100;
+}
+
+const productosDataDefault = {
+    "Papa": [
+        { x: 1, y: 8 }, { x: 5, y: 10 }, { x: 10, y: 13 },
+        { x: 15, y: 16 }, { x: 20, y: 19 }, { x: 30, y: 22 }
+    ],
+    "Arroz": [
+        { x: 1, y: 6 }, { x: 5, y: 7 }, { x: 10, y: 8.5 },
+        { x: 15, y: 10 }, { x: 20, y: 11 }, { x: 30, y: 13 }
+    ],
+    "Aceite": [
+        { x: 1, y: 12 }, { x: 5, y: 13 }, { x: 10, y: 14.5 },
+        { x: 15, y: 16 }, { x: 20, y: 18 }, { x: 30, y: 22 }
+    ],
+    "Pan": [
+        { x: 1, y: 2 }, { x: 5, y: 2.5 }, { x: 10, y: 3 },
+        { x: 15, y: 3.5 }, { x: 20, y: 4 }, { x: 30, y: 5 }
+    ],
+    "Azúcar": [
+        { x: 1, y: 5 }, { x: 5, y: 5.5 }, { x: 10, y: 6.5 },
+        { x: 15, y: 7.5 }, { x: 20, y: 8.5 }, { x: 30, y: 11 }
+    ],
+    "Carne": [
+        { x: 1, y: 25 }, { x: 5, y: 27 }, { x: 10, y: 30 },
+        { x: 15, y: 33 }, { x: 20, y: 36 }, { x: 30, y: 42 }
+    ]
+};
+
+function getDefaultPuntos(productoNombre) {
+    if (productosDataDefault[productoNombre]) {
+        return JSON.parse(JSON.stringify(productosDataDefault[productoNombre]));
+    }
+    return [
+        { x: 1, y: 10 }, { x: 10, y: 15 },
+        { x: 20, y: 20 }, { x: 30, y: 25 }
+    ];
+}
+
+// ==========================================
+// 2. MÉTODOS NUMÉRICOS
+// ==========================================
+
+// --- Lagrange ---
+function interpolacionLagrange(puntos, xEvaluar) {
+    if (!puntos || puntos.length === 0) return 0;
+    const n = puntos.length;
+    let resultado = 0;
+    
+    for (let i = 0; i < n; i++) {
+        let termino = puntos[i].y;
+        for (let j = 0; j < n; j++) {
+            if (j !== i) {
+                termino *= (xEvaluar - puntos[j].x) / (puntos[i].x - puntos[j].x);
+            }
+        }
+        resultado += termino;
+    }
+    return redondear(resultado);
+}
+
+function generarCurvaLagrange(puntos, rangoMin, rangoMax, paso = 0.5) {
+    if (!puntos || puntos.length === 0) return [];
+    const curva = [];
+    for (let x = rangoMin; x <= rangoMax; x += paso) {
+        curva.push({
+            x: redondear(x, 1),
+            y: interpolacionLagrange(puntos, x)
+        });
+    }
+    return curva;
+}
+
+// --- Newton ---
+function calcularDiferenciasDivididas(puntos) {
+    const n = puntos.length;
+    const tabla = [];
+    
+    for (let i = 0; i < n; i++) {
+        tabla[i] = [puntos[i].y];
+    }
+    
+    for (let j = 1; j < n; j++) {
+        for (let i = 0; i < n - j; i++) {
+            const numerador = tabla[i+1][j-1] - tabla[i][j-1];
+            const denominador = puntos[i+j].x - puntos[i].x;
+            tabla[i][j] = denominador !== 0 ? numerador / denominador : 0;
+        }
+    }
+    return tabla;
+}
+
+function interpolacionNewton(puntos, xEvaluar) {
+    if (!puntos || puntos.length === 0) return 0;
+    const n = puntos.length;
+    const tabla = calcularDiferenciasDivididas(puntos);
+    let resultado = tabla[0][0];
+    let producto = 1;
+    
+    for (let i = 1; i < n; i++) {
+        producto *= (xEvaluar - puntos[i-1].x);
+        resultado += tabla[0][i] * producto;
+    }
+    return redondear(resultado);
+}
+
+function generarTablaNewtonFormateada(puntos) {
+    const tabla = calcularDiferenciasDivididas(puntos);
+    const n = puntos.length;
+    
+    const filas = [];
+    for (let i = 0; i < n; i++) {
+        const fila = { x: puntos[i].x, f0: redondear(tabla[i][0]) };
+        for (let j = 1; j <= i; j++) {
+            fila[`f${j}`] = redondear(tabla[i-j][j]);
+        }
+        filas.push(fila);
+    }
+    return { filas };
+}
+
+function generarCurvaNewton(puntos, rangoMin, rangoMax, paso = 0.5) {
+    if (!puntos || puntos.length === 0) return [];
+    const curva = [];
+    for (let x = rangoMin; x <= rangoMax; x += paso) {
+        curva.push({
+            x: redondear(x, 1),
+            y: interpolacionNewton(puntos, x)
+        });
+    }
+    return curva;
+}
+
+// --- Splines Cúbicos ---
+function calcularSplinesCubicos(puntos) {
+    if (!puntos || puntos.length < 2) return [];
+    
+    const n = puntos.length;
+    const h = [];
+    const alpha = [];
+    const l = [];
+    const mu = [];
+    const z = [];
+    const a = [];
+    const b = [];
+    const c = [];
+    const d = [];
+    
+    for (let i = 0; i < n; i++) a[i] = puntos[i].y;
+    for (let i = 0; i < n - 1; i++) h[i] = puntos[i+1].x - puntos[i].x;
+    
+    for (let i = 1; i < n - 1; i++) {
+        alpha[i] = (3 / h[i]) * (a[i+1] - a[i]) - (3 / h[i-1]) * (a[i] - a[i-1]);
+    }
+    
+    l[0] = 1; mu[0] = 0; z[0] = 0;
+    
+    for (let i = 1; i < n - 1; i++) {
+        l[i] = 2 * (puntos[i+1].x - puntos[i-1].x) - h[i-1] * mu[i-1];
+        mu[i] = h[i] / l[i];
+        z[i] = (alpha[i] - h[i-1] * z[i-1]) / l[i];
+    }
+    
+    l[n-1] = 1; z[n-1] = 0; c[n-1] = 0;
+    
+    for (let j = n - 2; j >= 0; j--) {
+        c[j] = z[j] - mu[j] * c[j+1];
+        b[j] = (a[j+1] - a[j]) / h[j] - h[j] * (c[j+1] + 2 * c[j]) / 3;
+        d[j] = (c[j+1] - c[j]) / (3 * h[j]);
+    }
+    
+    const segmentos = [];
+    for (let i = 0; i < n - 1; i++) {
+        segmentos.push({
+            intervalo: [puntos[i].x, puntos[i+1].x],
+            a: a[i],
+            b: b[i],
+            c: c[i],
+            d: d[i]
+        });
+    }
+    return segmentos;
+}
+
+function interpolacionSplines(puntos, xEvaluar) {
+    if (!puntos || puntos.length < 2) return null;
+    
+    const segmentos = calcularSplinesCubicos(puntos);
+    if (segmentos.length === 0) return null;
+    
+    let segmento = null;
+    for (let i = 0; i < segmentos.length; i++) {
+        const [xi, xi1] = segmentos[i].intervalo;
+        if (xEvaluar >= xi && xEvaluar <= xi1) {
+            segmento = segmentos[i];
+            break;
+        }
+    }
+    
+    if (!segmento && xEvaluar < segmentos[0].intervalo[0]) {
+        segmento = segmentos[0];
+    } else if (!segmento && xEvaluar > segmentos[segmentos.length-1].intervalo[1]) {
+        segmento = segmentos[segmentos.length-1];
+    }
+    
+    if (!segmento) return null;
+    
+    const xi = segmento.intervalo[0];
+    const dx = xEvaluar - xi;
+    
+    const resultado = segmento.a + segmento.b * dx + segmento.c * Math.pow(dx, 2) + segmento.d * Math.pow(dx, 3);
+    return redondear(resultado);
+}
+
+function generarCurvaSplines(puntos, rangoMin, rangoMax, paso = 0.5) {
+    if (!puntos || puntos.length < 2) return [];
+    const curva = [];
+    for (let x = rangoMin; x <= rangoMax; x += paso) {
+        const y = interpolacionSplines(puntos, x);
+        if (y !== null) {
+            curva.push({ x: redondear(x, 1), y: y });
+        }
+    }
+    return curva;
+}
+
+// ==========================================
+// 3. LÓGICA DE LA INTERFAZ
+// ==========================================
 
 let chartLagrange, chartNewton, chartSplines, chartComparacion;
 let productos = [];
 let productoActivo = null;
 let puntosActuales = [];
 
-// Inicializar productos
 function inicializarProductos() {
     productos = [
         { id: 'Papa', nombre: 'Papa', icono: '<i class="fas fa-seedling"></i>', puntos: null },
@@ -21,7 +263,6 @@ function inicializarProductos() {
         { id: 'Carne', nombre: 'Carne', icono: '<i class="fas fa-drumstick-bite"></i>', puntos: null }
     ];
     
-    // Cargar puntos para cada producto
     for (const prod of productos) {
         prod.puntos = JSON.parse(JSON.stringify(getDefaultPuntos(prod.id)));
     }
@@ -109,7 +350,6 @@ function eliminarProductoActivo() {
 function renderizarTablaEditable() {
     const tbody = document.getElementById('tablaPuntosBody');
     tbody.innerHTML = '';
-    
     document.getElementById('puntosCount').innerText = `${puntosActuales.length} puntos`;
     
     puntosActuales.forEach((punto, idx) => {
@@ -201,7 +441,7 @@ function inicializarGraficos() {
 
     const ctxC = document.getElementById('chartComparacion').getContext('2d');
     chartComparacion = new Chart(ctxC, {
-        type: 'scatter',   // ← cambiar de 'line' a 'scatter'
+        type: 'scatter', 
         data: { datasets: [] },
         options: {
             responsive: true,
@@ -249,13 +489,9 @@ function actualizarSimulacion() {
     const { filas } = generarTablaNewtonFormateada(puntosOrdenados);
     const n = puntosOrdenados.length;
 
-    // Encabezado
     const thead = document.getElementById('newtonThead');
-    thead.innerHTML = '<tr><th>xᵢ</th>' + 
-        Array.from({ length: n }, (_, i) => `<th>f[${i}]</th>`).join('') + 
-    '</tr>';
+    thead.innerHTML = '<tr><th>xᵢ</th>' + Array.from({ length: n }, (_, i) => `<th>f[${i}]</th>`).join('') + '</tr>';
 
-    // Cuerpo — cada fila i tiene valores en columnas 0..i, el resto vacío
     const tbody = document.getElementById('newtonTbody');
     tbody.innerHTML = filas.map((f, i) => {
         let celdas = `<td style="padding:4px">${f.x}</td>`;
@@ -271,7 +507,7 @@ function actualizarSimulacion() {
     actualizarGrafico(chartSplines, curvaSplines, puntosOrdenados, `Splines - ${productoNombre}`, '#f59e0b');
     
     if (chartComparacion && curvaLagrange.length) {
-        chartComparacion.data.labels = [];  // vacío, no se necesitan labels globales
+        chartComparacion.data.labels = [];  
         chartComparacion.data.datasets = [
             {
                 label: 'Lagrange',

@@ -1,12 +1,165 @@
-// script.js
+// ==========================================
+// 1. UTILIDADES MATEMÁTICAS Y DATOS
+// ==========================================
 
-import { redondear, generarCurvaContinua, getDefaultData, productosDataDefault } from './utils/mathHelpers.js';
-import { integracionTrapecioConDetalle, calcularGastoTotal as trapecioGasto } from './modules/trapecio.js';
-import { integracionSimpson13, calcularGastoTotal as simpson13Gasto } from './modules/simpson13.js';
-import { integracionSimpson38, calcularGastoTotal as simpson38Gasto } from './modules/simpson38.js';
+function redondear(num, decimals = 2) {
+    if (num === null || isNaN(num)) return 0;
+    return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+}
+
+function interpolarLineal(x0, y0, x1, y1, x) {
+    if (x1 === x0) return y0;
+    const t = (x - x0) / (x1 - x0);
+    return y0 + t * (y1 - y0);
+}
+
+function generarCurvaContinua(dias, precios, rangoMin, rangoMax, paso = 0.2) {
+    const curva = [];
+    for (let x = rangoMin; x <= rangoMax; x += paso) {
+        let y = 0;
+        if (x <= dias[0]) {
+            y = precios[0];
+        } else if (x >= dias[dias.length - 1]) {
+            y = precios[precios.length - 1];
+        } else {
+            for (let i = 0; i < dias.length - 1; i++) {
+                if (x >= dias[i] && x <= dias[i + 1]) {
+                    y = interpolarLineal(dias[i], precios[i], dias[i + 1], precios[i + 1], x);
+                    break;
+                }
+            }
+        }
+        curva.push({ x: redondear(x, 1), y: redondear(y, 2) });
+    }
+    return curva;
+}
+
+const productosDataDefault = {
+    "Papa": { dias: [1, 5, 10, 15, 20, 30], precios: [8, 10, 13, 16, 19, 22], cantidad: 10 },
+    "Arroz": { dias: [1, 5, 10, 15, 20, 30], precios: [6, 7, 8.5, 10, 11, 13], cantidad: 8 },
+    "Aceite": { dias: [1, 5, 10, 15, 20, 30], precios: [12, 13, 14.5, 16, 18, 22], cantidad: 2 },
+    "Pan": { dias: [1, 5, 10, 15, 20, 30], precios: [2, 2.5, 3, 3.5, 4, 5], cantidad: 30 },
+    "Azucar": { dias: [1, 5, 10, 15, 20, 30], precios: [5, 5.5, 6.5, 7.5, 8.5, 11], cantidad: 5 },
+    "Carne": { dias: [1, 5, 10, 15, 20, 30], precios: [25, 27, 30, 33, 36, 42], cantidad: 5 }
+};
+
+function getDefaultData(productoNombre) {
+    if (productosDataDefault[productoNombre]) {
+        const data = productosDataDefault[productoNombre];
+        return {
+            dias: [...data.dias],
+            precios: [...data.precios],
+            cantidad: data.cantidad
+        };
+    }
+    return { dias: [1, 10, 20, 30], precios: [10, 15, 20, 25], cantidad: 5 };
+}
+
+// Función compartida para calcular el gasto
+function calcularGastoTotal(integral, cantidadMensual, diasTotales = 30) {
+    const precioPromedioDiario = integral / diasTotales;
+    const gastoTotal = precioPromedioDiario * cantidadMensual;
+    return {
+        precioPromedio: redondear(precioPromedioDiario),
+        gastoTotal: redondear(gastoTotal),
+        area: integral
+    };
+}
+
+
+// ==========================================
+// 2. MÉTODOS DE INTEGRACIÓN
+// ==========================================
+
+function integracionTrapecioConDetalle(dias, precios) {
+    if (!dias || !precios || dias.length < 2) return { integral: 0, detalles: [] };
+    
+    let integral = 0;
+    const detalles = [];
+    
+    for (let i = 0; i < dias.length - 1; i++) {
+        const h = dias[i + 1] - dias[i];
+        const area = (h / 2) * (precios[i] + precios[i + 1]);
+        integral += area;
+        detalles.push({
+            segmento: i + 1,
+            intervalo: `[${dias[i]}, ${dias[i + 1]}]`,
+            h: redondear(h),
+            area: redondear(area)
+        });
+    }
+    return { integral: redondear(integral), detalles };
+}
+
+function integracionSimpson13(dias, precios) {
+    if (!dias || !precios || dias.length < 2) return 0;
+    
+    const n = dias.length;
+    let integral = 0;
+    let i = 0;
+    
+    while (i < n - 1) {
+        if (i + 2 < n) {
+            const h1 = dias[i + 1] - dias[i];
+            const h2 = dias[i + 2] - dias[i + 1];
+            
+            if (Math.abs(h1 - h2) < 0.01) {
+                const h = h1;
+                const area = (h / 3) * (precios[i] + 4 * precios[i + 1] + precios[i + 2]);
+                integral += area;
+                i += 2;
+            } else {
+                const h = dias[i + 1] - dias[i];
+                integral += (h / 2) * (precios[i] + precios[i + 1]);
+                i++;
+            }
+        } else {
+            const h = dias[i + 1] - dias[i];
+            integral += (h / 2) * (precios[i] + precios[i + 1]);
+            i++;
+        }
+    }
+    return redondear(integral);
+}
+
+function integracionSimpson38(dias, precios) {
+    if (!dias || !precios || dias.length < 2) return 0;
+    
+    const n = dias.length;
+    let integral = 0;
+    let i = 0;
+    
+    while (i < n - 1) {
+        if (i + 3 < n) {
+            const h1 = dias[i + 1] - dias[i];
+            const h2 = dias[i + 2] - dias[i + 1];
+            const h3 = dias[i + 3] - dias[i + 2];
+            
+            if (Math.abs(h1 - h2) < 0.01 && Math.abs(h2 - h3) < 0.01) {
+                const h = h1;
+                const area = (3 * h / 8) * (precios[i] + 3 * precios[i + 1] + 3 * precios[i + 2] + precios[i + 3]);
+                integral += area;
+                i += 3;
+            } else {
+                const h = dias[i + 1] - dias[i];
+                integral += (h / 2) * (precios[i] + precios[i + 1]);
+                i++;
+            }
+        } else {
+            const h = dias[i + 1] - dias[i];
+            integral += (h / 2) * (precios[i] + precios[i + 1]);
+            i++;
+        }
+    }
+    return redondear(integral);
+}
+
+
+// ==========================================
+// 3. LÓGICA DE LA INTERFAZ Y GRÁFICOS
+// ==========================================
 
 let chartTrapecio, chartSimpson13, chartSimpson38, chartComparacion;
-
 let productos = [];
 let productoEditando = null;
 let puntosActuales = [];
@@ -215,9 +368,9 @@ function actualizarSimulacion() {
     const areaSimpson13 = integracionSimpson13(prodActual.dias, prodActual.precios);
     const areaSimpson38 = integracionSimpson38(prodActual.dias, prodActual.precios);
     
-    const resultTrapecio = trapecioGasto(areaTrapecio, prodActual.cantidad, 30);
-    const resultSimpson13 = simpson13Gasto(areaSimpson13, prodActual.cantidad, 30);
-    const resultSimpson38 = simpson38Gasto(areaSimpson38, prodActual.cantidad, 30);
+    const resultTrapecio = calcularGastoTotal(areaTrapecio, prodActual.cantidad, 30);
+    const resultSimpson13 = calcularGastoTotal(areaSimpson13, prodActual.cantidad, 30);
+    const resultSimpson38 = calcularGastoTotal(areaSimpson38, prodActual.cantidad, 30);
     
     // Actualizar UI
     document.getElementById('trapecioGastoTotal').innerHTML = `${resultTrapecio.gastoTotal} Bs`;
